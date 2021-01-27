@@ -20,7 +20,11 @@ class LoadInventory
   end
 
   private
-  
+  ##
+  # Note: parse_pipe_file and parse_csv_file looks similar, but the purpose and the order of fields are different.
+  # We want to separete the logic in case any of the files structure changes.
+  ##
+
   #update inventory table with pipe file with order: Quanitity | Format | Release year | Artist | Title
   def self.parse_pipe_file(pipe:)
     artist_cache = {}
@@ -28,18 +32,19 @@ class LoadInventory
     inventory_cache = {}
 
     CSV.foreach(pipe, { :col_sep => '|' }) do |data|
+      # Get the fields information and clean it
       quantity = data[0].to_i
       fmt = Music.format_name_normalizer(fmt: data[1])
       release_year = data[2]
       artist =  data[3].to_s.strip
       title = data[4].to_s.strip
 
-      puts "artist: #{artist} - title: #{title} - fmt: #{fmt} - release_year: #{release_year} - q: #{quantity}"
-
+      # We create the ids based on album title, artist name and format. This is assuming the names are unique and only with casing issues
       inventory_id = Music.make_inventory_id(album_format: fmt, album_title: title)
       artist_id = Music.make_artist_id(artist_name: artist) 
       album_id = Music.make_album_id(artist_name: artist, album_title: title)
 
+      # We check if the artist was inserted
       if artist_cache.key?(artist_id)
         puts "Artist #{artist} already existed"
       else
@@ -50,7 +55,8 @@ class LoadInventory
         end  
         artist_cache[artist_id] = artist
       end
-        
+      
+      # We check if the album was inserted
       if album_cache.key?(album_id)
         puts "Album #{title} already existed"
       else
@@ -62,6 +68,7 @@ class LoadInventory
         album_cache[album_id] = title
       end  
 
+      # We check if the item was inserted in inventory. We insert or update the record depending on if teh record exists or not
       if inventory_cache.key?(inventory_id)
         puts "Already in inventory: #{inventory_id}"
       else
@@ -86,15 +93,18 @@ class LoadInventory
     csv_parse = CSV.parse(File.read(csv))
 
     csv_parse.each do |data|
+      # Get the fields information and clean it
       artist = data[0].to_s.strip
       title = data[1].to_s.strip
       fmt = Music.format_name_normalizer(fmt: data[2])
       release_year = data[3]
 
+      # We create the ids based on album title, artist name and format. This is assuming the names are unique and only with casing issues
       inventory_id = Music.make_inventory_id(album_format: fmt, album_title: title)
       artist_id = Music.make_artist_id(artist_name: artist) 
       album_id = Music.make_album_id(artist_name: artist, album_title: title)
 
+      # We check if the artist was inserted
       if artist_cache.key?(artist_id)
         puts "Artist #{artist} already existed"
       else
@@ -105,7 +115,8 @@ class LoadInventory
         end  
         artist_cache[artist_id] = artist
       end
-        
+      
+      # We check if the album was inserted
       if album_cache.key?(album_id)
         puts "Album #{title} already existed"
       else
@@ -117,6 +128,7 @@ class LoadInventory
         album_cache[album_id] = title
       end  
 
+      # We check if the item was inserted in inventory
       if inventory_cache.key?(inventory_id)
         puts "Already in inventory: #{inventory_id}"
       else

@@ -43,6 +43,7 @@ module Music
     hash_string(str_to_hash: strng)
   end
 
+  # encode string into hash
   def self.hash_string(str_to_hash:)
     clean_str = str_to_hash.downcase.strip.encode("utf-8")
     hsh = Digest::SHA1.hexdigest(clean_str)[0..30]
